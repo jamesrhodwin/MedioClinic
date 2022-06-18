@@ -22,7 +22,6 @@ var CMSContentManager = {
     checkChangedFields: null,
     eventManager: null,
     fullFormScope: true,
-    editorsReset: false,
    
 
     // Functions
@@ -187,7 +186,7 @@ var CMSContentManager = {
                             if (oldText !== newText) {
                                 return true;
                             }
-                        } else if (!this.editorsReset) {
+                        } else {
                             oldText = this._fullTrim(document.getElementById(name).innerText);
                             newText = this._fullTrim(oEditor.getData());
                             if (oldText !== newText) {
@@ -216,9 +215,6 @@ var CMSContentManager = {
                     }
                 }
             }
-
-            // The flag prevents from redundant checking of unsaved changes.
-            this.editorsReset = true;
         }
         catch (ex) {
         }

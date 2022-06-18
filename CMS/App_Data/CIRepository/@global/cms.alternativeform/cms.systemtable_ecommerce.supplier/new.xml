@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<cms.alternativeform>
+  <FormClassID>
+    <CodeName>ecommerce.supplier</CodeName>
+    <GUID>d30e1123-ea76-42db-8f74-a20da0c54d03</GUID>
+    <ObjectType>cms.systemtable</ObjectType>
+  </FormClassID>
+  <FormCustomizedColumns />
+  <FormDefinition>
+    <form>
+      <field column="SupplierSiteID" visible="true" order="6">
+        <settings>
+          <Options>
+<![CDATA[
+{%SiteContext.CurrentSiteID|(identity)GlobalAdministrator|(hash)f072115c22c6c80760463fa9bc7f18a1bdeacdfe65cb13cfda1646fd11efc0f2%};{$com.onthissiteonly$}
+;{$com.globally$}
+]]>
+          </Options>
+          <SortItems>False</SortItems>
+          <EditText>False</EditText>
+        </settings>
+        <properties>
+          <visiblemacro ismacro="true">
+            <![CDATA[{%Settings.CMSStoreAllowGlobalSuppliers && CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","EcommerceGlobalModify") && (CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","ModifySuppliers") || CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","EcommerceModify"))|(identity)GlobalAdministrator|(hash)3865edd61d795464c3a28ce7cd445ba3ba41358bbd6ba660279764fd5b66af09%}]]>
+          </visiblemacro>
+          <defaultvalue ismacro="true">
+<![CDATA[
+{% if (!Settings.CMSStoreAllowGlobalSuppliers
+    || !CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","EcommerceGlobalModify")
+    || CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","ModifySuppliers")
+    || CurrentUser.IsAuthorizedPerResource("CMS.Ecommerce","EcommerceModify")) {SiteContext.CurrentSiteID} |(identity)GlobalAdministrator|(hash)90156730e728d61bd2d11b88935bdf20d160d9e4d23fc66bc57ded77dbf8896d%}
+]]>
+          </defaultvalue>
+          <fieldcaption>{$com.available$}</fieldcaption>
+        </properties>
+      </field>
+      <field column="SupplierEnabled" order="7" />
+      <field column="SupplierGUID" order="8" />
+      <field column="SupplierLastModified" order="9" />
+    </form>
+  </FormDefinition>
+  <FormDisplayName>New</FormDisplayName>
+  <FormGUID>ffa4eebb-d119-475a-88a1-57f41df1975f</FormGUID>
+  <FormHideNewParentFields>False</FormHideNewParentFields>
+  <FormIsCustom>False</FormIsCustom>
+  <FormName>New</FormName>
+</cms.alternativeform>

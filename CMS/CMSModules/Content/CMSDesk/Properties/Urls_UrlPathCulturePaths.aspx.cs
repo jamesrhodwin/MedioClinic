@@ -216,7 +216,7 @@ public partial class CMSModules_Content_CMSDesk_Properties_Urls_UrlPathCulturePa
 
                     PageRoutingHelper.EnsurePathFormat(urlPath, Node.NodeSiteID, out var formattedPath);
                     var completeUrl = $"{GetSitePresentationUrl(urlPathCulture)}{formattedPath}";
-                    var escapedUrl = Uri.EscapeDataString(completeUrl);
+                    var escapedUrl = Uri.EscapeUriString(completeUrl);
 
                     var eyeButton = (CMSGridActionButton)sender;
                     eyeButton.OnClientClick = $"window.open(\"{escapedUrl}\"); return false;";

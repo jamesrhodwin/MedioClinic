@@ -754,14 +754,28 @@ public partial class CMSModules_Ecommerce_Controls_ShoppingCart_ShoppingCartCont
     {
         string name = ResHelper.LocalizeString((string)value);
         string text = itemText as string;
-        bool isOption = ValidationHelper.GetBoolean(isProductOption, false);
+        StringBuilder skuName = new StringBuilder();
 
-        if (isOption && !String.IsNullOrEmpty(text))
+        // If it is a product option or bundle item
+        if (ValidationHelper.GetBoolean(isProductOption, false))
         {
-            name += $" '{text}'";
+            skuName.Append("<span style=\"font-size: 90%\"> - ");
+            skuName.Append(HTMLHelper.HTMLEncode(name));
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                skuName.Append(" '" + HTMLHelper.HTMLEncode(text) + "'");
+            }
+
+            skuName.Append("</span>");
+        }
+        // If it is a parent product
+        else
+        {
+            skuName.Append(HTMLHelper.HTMLEncode(name));
         }
 
-        return $"<span{(isOption ? " style=\"font-size: 90%\" - " : "")} title=\"{HTMLHelper.HTMLEncode(name)}\">{HTMLHelper.HTMLEncode(TextHelper.LimitLength(name, 75))}</span>";
+        return skuName.ToString();
     }
 
 

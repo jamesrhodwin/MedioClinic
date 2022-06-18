@@ -8,7 +8,6 @@ using CMS.Base.Web.UI;
 using CMS.DataEngine;
 using CMS.Helpers;
 using CMS.Membership;
-using CMS.OnlineForms;
 using CMS.Search;
 using CMS.UIControls;
 
@@ -118,7 +117,7 @@ public partial class CMSModules_SmartSearch_Controls_UI_General_List : CMSAdminC
                     PredefinedObjectType.BIZFORM_ITEM_PREFIX,
                     PredefinedObjectType.DOCUMENT,
                     PredefinedObjectType.NODE,
-                    BizFormInfo.OBJECT_TYPE,
+                    SearchHelper.ONLINEFORMINDEX,
                 }
                 .Select(x => x.ToLowerInvariant())
                 .ToList();

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<cms.transformation>
+  <TransformationClassID>
+    <CodeName>Ecommerce.Transformations</CodeName>
+    <GUID>7539c21d-cde0-4d71-ab9f-12de5ddec092</GUID>
+    <ObjectType>cms.documenttype</ObjectType>
+  </TransformationClassID>
+  <TransformationCode>
+<![CDATA[
+<div class="content-block-25">
+{% Localize(AddressPersonalName)|(encode)true %}<br/>
+{% Localize(AddressLine1)|(encode)true %}<br/>
+{% if (AddressLine2 != null) { %}
+  {% Localize(AddressLine2)|(encode)true %}
+<br/>
+{% }|(identity)GlobalAdministrator|(hash)291bdeb9e7a95d122034558dbf1755e585e800122821045efd72734194e810fe%}
+{% Localize(AddressCity)|(encode)true %}{% if (AddressState.StateDisplayName != null) { ", " + Localize(AddressState.StateDisplayName)|(encode)true }|(identity)GlobalAdministrator|(hash)1f9bafe7ec467d3ae0f3fbdea440f627e9f6c91acc44ac0a2d825c1a567a5a5d%}
+{% Localize(AddressZip)|(encode)true %} <br/>
+{% Localize(AddressCountry.CountryDisplayName)|(encode)true |(identity)GlobalAdministrator|(hash)6764c13ff2202083ae4fbb0c375edf42f1d7f43318741c1c5a9e778fe9b41d0d%}<br/>
+{% if (AddressPhone != null) { %}
+  {% Localize(AddressPhone)|(encode)true %}
+<br/>
+{% }|(identity)GlobalAdministrator|(hash)95ff2894356c128c8a39f094a1b7e670d76237a4ca6f8642593ef4c51ade0ac2%}
+</div>
+]]>
+  </TransformationCode>
+  <TransformationGUID>55d4e08c-8174-4274-954d-298c538633bf</TransformationGUID>
+  <TransformationName>Order_OrderAddressDetail</TransformationName>
+  <TransformationType>text</TransformationType>
+</cms.transformation>

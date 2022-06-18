@@ -1,41 +1,74 @@
-using Kentico.Content.Web.Mvc;
-using Kentico.Content.Web.Mvc.Routing;
-using Kentico.Web.Mvc;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Autofac;
 
-namespace BlankSiteCore
+using CMS.Core;
+using CMS.DataEngine;
+using CMS.Helpers;
+using CMS.SiteProvider;
+using Kentico.Content.Web.Mvc;
+using Kentico.Content.Web.Mvc.Routing;
+using Kentico.PageBuilder.Web.Mvc;
+using Kentico.Membership;
+using Kentico.Web.Mvc;
+
+using Common.Configuration;
+using XperienceAdapter.Localization;
+using MedioClinic.Configuration;
+using MedioClinic.Extensions;
+using MedioClinic.Models;
+using MedioClinic.PageTemplates;
+
+namespace MedioClinic
 {
     public class Startup
     {
+        private const string ConventionalRoutingControllers = "Error|ImageUploader|MediaLibraryUploader|FormTest";
+
+        public IConfiguration Configuration { get; }
+
         public IWebHostEnvironment Environment { get; }
 
+        public IConfigurationSection? Options { get; }
 
-        public Startup(IWebHostEnvironment environment)
+        public string? DefaultCulture => SettingsKeyInfoProvider.GetValue($"{Options?.GetSection("SiteCodeName")}.CMSDefaultCultureCode");
+
+        public AutoFacConfig AutoFacConfig => new AutoFacConfig();
+
+        public Startup(IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
         {
-            Environment = environment;
+            Environment = webHostEnvironment;
+            Configuration = configuration;
+            Options = configuration.GetSection(nameof(XperienceOptions));
         }
 
-
         // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             // Enable desired Kentico Xperience features
             var kenticoServiceCollection = services.AddKentico(features =>
             {
-                // features.UsePageBuilder();
+                features.UsePageBuilder();
                 // features.UseActivityTracking();
                 // features.UseABTesting();
                 // features.UseWebAnalytics();
                 // features.UseEmailTracking();
                 // features.UseCampaignLogger();
                 // features.UseScheduler();
-                // features.UsePageRouting();
+                features.UsePageRouting(new PageRoutingOptions { CultureCodeRouteValuesKey = "culture" });
             });
 
             if (Environment.IsDevelopment())
@@ -56,7 +89,24 @@ namespace BlankSiteCore
             services.AddAuthentication();
             // services.AddAuthorization();
 
-            services.AddControllersWithViews();
+            services.AddLocalization();
+            services.AddAntiforgery(options => options.SuppressXFrameOptionsHeader = false);
+
+            services.AddControllersWithViews()
+                .AddDataAnnotationsLocalization(options =>
+                {
+                    options.DataAnnotationLocalizerProvider = (type, factory) =>
+                    {
+                        var assemblyName = typeof(SharedResource).GetTypeInfo().Assembly.GetName().Name;
+
+                        return factory.Create("SharedResource", assemblyName);
+                    };
+                });
+
+            services.Configure<XperienceOptions>(Options);
+            var xperienceOptions = Options.Get<XperienceOptions>();
+
+            ConfigurePageBuilderFilters();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,7 +115,41 @@ namespace BlankSiteCore
             if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseBrowserLink();
             }
+            else
+            {
+                app.UseExceptionHandler(errorApp =>
+                {
+                    errorApp.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500;
+                        context.Response.ContentType = "text/html";
+
+                        await context.Response.WriteAsync("<html lang=\"en\"><body>\r\n");
+                        await context.Response.WriteAsync("An error happened.<br><br>\r\n");
+
+                        var exceptionHandlerPathFeature =
+                            context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+
+                        if (exceptionHandlerPathFeature?.Error is System.IO.FileNotFoundException)
+                        {
+                            await context.Response.WriteAsync("A file error happened.<br><br>\r\n");
+                        }
+
+                        await context.Response.WriteAsync("<a href=\"/\">Home</a><br>\r\n");
+                        await context.Response.WriteAsync("</body></html>\r\n");
+                        await context.Response.WriteAsync(new string(' ', 512)); // IE padding
+                    });
+                });
+
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseLocalizedStatusCodePagesWithReExecute("/{0}/error/{1}/");
+
+            app.UseHttpsRedirection();
 
             app.UseStaticFiles();
 
@@ -75,18 +159,53 @@ namespace BlankSiteCore
 
             app.UseCors();
 
+            app.UseRouting();
+
+            app.UseRequestCulture();
+
             app.UseAuthentication();
-            // app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.Kentico().MapRoutes();
 
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("The site has not been configured yet.");
-                });
+                endpoints.MapControllerRoute(
+                    name: "error",
+                    pattern: "{culture}/error/{code}",
+                    defaults: new { controller = "Error", action = "Index" },
+                    constraints: new
+                    {
+                        controller = ConventionalRoutingControllers
+                    });
+
+                endpoints.MapDefaultControllerRoute();
             });
         }
+
+        /// <summary>
+        /// Registers a handler in case Xperience is not initialized yet.
+        /// </summary>
+        /// <param name="builder">Container builder.</param>
+        private void RegisterInitializationHandler(ContainerBuilder builder) =>
+            CMS.Base.ApplicationEvents.Initialized.Execute += (sender, eventArgs) => AutoFacConfig.ConfigureContainer(builder);
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            try
+            {
+                AutoFacConfig.ConfigureContainer(builder);
+            }
+            catch
+            {
+                RegisterInitializationHandler(builder);
+            }
+        }
+
+        /// <summary>
+        /// Configures the page template filters.
+        /// </summary>
+        private static void ConfigurePageBuilderFilters() =>
+            PageBuilderFilters.PageTemplates.Add(new EventPageTemplateFilter());
     }
 }

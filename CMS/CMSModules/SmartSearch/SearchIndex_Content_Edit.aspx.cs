@@ -61,7 +61,7 @@ public partial class CMSModules_SmartSearch_SearchIndex_Content_Edit : GlobalAdm
                 }
                 break;
 
-            case SearchHelper.ONLINEFORMINDEX:
+            case PredefinedObjectType.BIZFORM:
                 {
                     // Custom table index
                     onLineFormEdit.ItemID = indexId;
@@ -145,7 +145,7 @@ public partial class CMSModules_SmartSearch_SearchIndex_Content_Edit : GlobalAdm
                 control = customTableEdit;
                 break;
 
-            case SearchHelper.ONLINEFORMINDEX:
+            case PredefinedObjectType.BIZFORM:
                 control = onLineFormEdit;
                 break;
 

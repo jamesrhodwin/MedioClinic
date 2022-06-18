@@ -1174,41 +1174,33 @@ public partial class CMSModules_MediaLibrary_Controls_Dialogs_LinkMediaSelector 
             string path = (dialogConfig.ContainsColumn("media.path") ? (string)dialogConfig["media.path"] : string.Empty);
             string siteName = (dialogConfig.ContainsColumn("media.sitename") ? (string)dialogConfig["media.sitename"] : string.Empty);
 
-            // Set user dialogs configuration only if all sites available in selector or selected site is equal to users.
-            if (librarySelector.Sites != AvailableSitesEnum.All && librarySelector.SelectedSiteName != siteName)
+            // Set user dialogs configuration only if all sites available in selector or selected site is equal to users
+            if ((librarySelector.Sites == AvailableSitesEnum.All) || (librarySelector.SelectedSiteName == siteName))
             {
-                return;
-            }
-
-            // Set user dialogs configuration only if all libraries available in selector or selected library is equal to users.
-            if (librarySelector.GlobalLibraries != AvailableLibrariesEnum.All && librarySelector.GlobalLibraryName != libraryName)
-            {
-                return;
-            }
-
-            if (libraryName != string.Empty && siteName != string.Empty)
-            {
-                MediaLibraryInfo mli = MediaLibraryInfo.Provider.Get(libraryName, SiteInfoProvider.GetSiteID(siteName));
-                if (mli != null)
+                if ((libraryName != string.Empty) && (siteName != string.Empty))
                 {
-                    librarySelector.SelectedSiteName = siteName;
-                    librarySelector.SelectedLibraryID = mli.LibraryID;
-                }
-            }
-
-            if (path != string.Empty)
-            {
-                FolderPath = path;
-
-                if (StartingPath != string.Empty)
-                {
-                    path = GetFilePath(path);
+                    MediaLibraryInfo mli = MediaLibraryInfo.Provider.Get(libraryName, SiteInfoProvider.GetSiteID(siteName));
+                    if (mli != null)
+                    {
+                        librarySelector.SelectedSiteName = siteName;
+                        librarySelector.SelectedLibraryID = mli.LibraryID;
+                    }
                 }
 
-                folderTree.PathToSelect = path;
+                if (path != string.Empty)
+                {
+                    FolderPath = path;
 
-                // Save value to request
-                RequestStockHelper.AddToStorage(LINK_MEDIA_SELECTOR_STORAGE_KEY, "FolderPath", FolderPath);
+                    if (StartingPath != string.Empty)
+                    {
+                        path = GetFilePath(path);
+                    }
+
+                    folderTree.PathToSelect = path;
+
+                    // Save value to request
+                    RequestStockHelper.AddToStorage(LINK_MEDIA_SELECTOR_STORAGE_KEY, "FolderPath", FolderPath);
+                }
             }
         }
     }
